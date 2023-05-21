@@ -1,0 +1,34 @@
+# ---- Build stage ----
+
+FROM python:3.9-slim-buster AS build-stage
+
+WORKDIR /app
+
+COPY requirements.txt .
+
+RUN python -m venv venv
+
+# Activate the virtual environment
+ENV PATH="/app/venv/bin:$PATH"
+
+RUN pip3 install --no-cache-dir -r requirements.txt 
+
+COPY main.py .
+
+# ---- Release stage ----
+
+FROM python:3.9-slim-buster AS release-stage
+
+WORKDIR /app
+
+COPY --from=build-stage /app/venv /app/venv
+
+# Activate the virtual environment
+ENV PATH="/app/venv/bin:$PATH"
+
+COPY --from=build-stage /app/main.py .
+
+expose 5500
+
+CMD ["python3", "main.py"]
+
